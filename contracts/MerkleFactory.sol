@@ -36,6 +36,7 @@ contract MerkleFactory is Ownable {
         require(duration >= minClaimPeriod && duration <= maxClaimPeriod, "Invalid duration to claim airdrop");
         require(_amount > 0, "Zero amount");
 
+        MerkleChild newAirdrop = new MerkleChild(_token, msg.sender, owner(), _startDate, _endDate, _merkleRoot);
         airdropUserList[address(newAirdrop)] = _url;
 
         if (_isPayingInToken) {
@@ -45,9 +46,7 @@ contract MerkleFactory is Ownable {
             feeAddress.transfer(msg.value);
         }
 
-        MerkleChild newAirdrop = new MerkleChild(_token, msg.sender, owner(), _startDate, _endDate, _merkleRoot);
         allAirdrops.push(address(newAirdrop));
-
         tokenAirdrops[_token].push(address(newAirdrop));
         creatorAirdrops[msg.sender].push(address(newAirdrop));
 
