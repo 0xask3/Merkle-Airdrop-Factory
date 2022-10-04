@@ -8,6 +8,7 @@ import "./MerkleChild.sol";
 contract MerkleFactory is Ownable {
     mapping(address => address[]) private tokenAirdrops;
     mapping(address => address[]) private creatorAirdrops;
+    mapping(address => string) public airdropUserList;
     address[] private allAirdrops;
 
     IERC20 private immutable weth;
@@ -28,11 +29,14 @@ contract MerkleFactory is Ownable {
         uint256 _amount,
         uint256 _startDate,
         uint256 _endDate,
+        string memory _url,
         bytes32 _merkleRoot
     ) external payable {
         uint256 duration = _endDate - _startDate;
         require(duration >= minClaimPeriod && duration <= maxClaimPeriod, "Invalid duration to claim airdrop");
         require(_amount > 0, "Zero amount");
+
+        airdropUserList[address(newAirdrop)] = _url;
 
         if (_isPayingInToken) {
             weth.transferFrom(msg.sender, feeAddress, feeValue);

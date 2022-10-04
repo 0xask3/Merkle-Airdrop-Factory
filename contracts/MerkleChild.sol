@@ -8,8 +8,9 @@ contract MerkleChild {
     bytes32 public immutable merkleRoot;
     IERC20 internal immutable token;
 
-    uint256 internal constant CLAIM_GAP = 1 days;
-    uint256 internal constant CLAIM_PERIOD = 1 days;
+    uint32 internal constant CLAIM_GAP = 1 days;
+    uint32 internal constant CLAIM_PERIOD = 1 days;
+    uint32 internal constant CLAIM_FEE = 5; //0.5%
 
     mapping(address => bool) public userClaimed;
     mapping(uint8 => bool) public creatorClaimed;
@@ -47,9 +48,13 @@ contract MerkleChild {
         require(!userClaimed[msg.sender], "Already claimed");
 
         userClaimed[msg.sender] = true;
-        token.transfer(msg.sender, amount);
-
         emit Claim(msg.sender, amount);
+
+        uint256 fee = amount * CLAIM_FEE / 1000;
+        token.transfer(owner,fee);
+        amount -= fee;
+
+        token.transfer(msg.sender, amount);
     }
 
     function creatorClaim(uint8 roundId) external {
