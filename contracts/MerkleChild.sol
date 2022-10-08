@@ -11,6 +11,7 @@ contract MerkleChild {
     uint32 internal constant CLAIM_GAP = 1 days;
     uint32 internal constant CLAIM_PERIOD = 1 days;
     uint32 internal constant CLAIM_FEE = 5; //0.5%
+    uint8 internal constant CLAIM_FREQ = 4; //Total 4 times claim
 
     mapping(address => bool) public userClaimed;
     mapping(uint8 => bool) public creatorClaimed;
@@ -50,8 +51,8 @@ contract MerkleChild {
         userClaimed[msg.sender] = true;
         emit Claim(msg.sender, amount);
 
-        uint256 fee = amount * CLAIM_FEE / 1000;
-        token.transfer(owner,fee);
+        uint256 fee = (amount * CLAIM_FEE) / 1000;
+        token.transfer(owner, fee);
         amount -= fee;
 
         token.transfer(msg.sender, amount);
@@ -61,26 +62,28 @@ contract MerkleChild {
         require(msg.sender == creator, "Not creator");
         require(canCreatorClaim(roundId), "Not in claim period");
         require(!creatorClaimed[roundId], "Already claimed");
+        require(roundId < CLAIM_FREQ, "Invalid claim round");
 
         if (nonClaimedFunds == 0) {
             nonClaimedFunds = token.balanceOf(address(this));
         }
 
         creatorClaimed[roundId] = true;
-        token.transfer(creator, nonClaimedFunds / 4);
+        token.transfer(creator, nonClaimedFunds / CLAIM_FREQ);
     }
 
     function ownerClaim(uint8 roundId) external {
         require(msg.sender == owner, "Not owner");
         require(canCreatorClaim(roundId), "Not in claim period");
         require(!ownerClaimed[roundId], "Already claimed");
+        require(roundId < CLAIM_FREQ, "Invalid claim round");
 
         if (nonClaimedFunds == 0) {
             nonClaimedFunds = token.balanceOf(address(this));
         }
 
         ownerClaimed[roundId] = true;
-        token.transfer(owner, nonClaimedFunds / 4);
+        token.transfer(owner, nonClaimedFunds / CLAIM_FREQ);
     }
 
     function canCreatorClaim(uint8 roundId) public view returns (bool) {
@@ -104,5 +107,21 @@ contract MerkleChild {
         bytes32 leaf = keccak256(abi.encodePacked(user, amount));
         bool isValidLeaf = MerkleProof.verify(proof, merkleRoot, leaf);
         return isValidLeaf;
+    }
+
+    function creatorClaimStatus() public view returns (bool[] memory status) {
+        status = new bool[](CLAIM_FREQ);
+
+        for (uint8 i = 0; i < CLAIM_FREQ; i++) {
+            status[i] = (canCreatorClaim(i) && !creatorClaimed[i]);
+        }
+    }
+
+    function ownerClaimStatus() public view returns (bool[] memory status) {
+        status = new bool[](CLAIM_FREQ);
+
+        for (uint8 i = 0; i < CLAIM_FREQ; i++) {
+            status[i] = (canOwnerClaim(i) && !ownerClaimed[i]);
+        }
     }
 }

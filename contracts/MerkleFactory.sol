@@ -74,4 +74,18 @@ contract MerkleFactory is Ownable {
     function getAllAirdrops() public view returns (address[] memory) {
         return allAirdrops;
     }
+
+    function getAllAirdropsByIndex(uint256 startIdx, uint256 endIdx) public view returns (address[] memory) {
+        if (endIdx > allAirdrops.length - 1) {
+            endIdx = allAirdrops.length - 1;
+        }
+        address[] memory list = new address[](endIdx - startIdx + 1);
+        uint256 counter = 0;
+
+        for (uint256 i = startIdx; i <= endIdx; i++) {
+            list[counter] = allAirdrops[i];
+            counter++;
+        }
+        return list;
+    }
 }
