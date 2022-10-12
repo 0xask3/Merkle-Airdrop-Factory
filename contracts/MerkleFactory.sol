@@ -11,7 +11,7 @@ contract MerkleFactory is Ownable {
     mapping(address => string) public airdropUserList;
     address[] private allAirdrops;
 
-    IERC20 private immutable weth;
+    IERC20 public immutable weth;
     uint256 public feeValue = 0.01 ether;
     address payable public feeAddress;
 
