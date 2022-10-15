@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract MerkleChild {
     bytes32 public immutable merkleRoot;
-    IERC20 internal immutable token;
+    IERC20 public immutable token;
 
     uint32 internal constant CLAIM_GAP = 1 days;
     uint32 internal constant CLAIM_PERIOD = 1 days;
@@ -17,8 +17,7 @@ contract MerkleChild {
     mapping(uint8 => bool) public creatorClaimed;
     mapping(uint8 => bool) public ownerClaimed;
 
-    uint256 internal nonClaimedFunds;
-
+    uint256 public nonClaimedFunds;
     uint256 public startDate;
     uint256 public endDate;
 
@@ -123,5 +122,9 @@ contract MerkleChild {
         for (uint8 i = 0; i < CLAIM_FREQ; i++) {
             status[i] = (canOwnerClaim(i) && !ownerClaimed[i]);
         }
+    }
+
+    function userClaimStatus(address user) public view returns (bool) {
+        return block.timestamp >= startDate && block.timestamp <= endDate && !userClaimed[user];
     }
 }
