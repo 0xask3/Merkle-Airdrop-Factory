@@ -4,13 +4,17 @@ pragma solidity ^0.8.16;
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
+interface IFactory {
+    function claimFee() external view returns (uint256);
+}
+
 contract MerkleChild {
     bytes32 public immutable merkleRoot;
     IERC20 public immutable token;
+    IFactory private immutable factory;
 
     uint32 internal constant CLAIM_GAP = 1 days;
     uint32 internal constant CLAIM_PERIOD = 1 days;
-    uint32 internal constant CLAIM_FEE = 5; //0.5%
     uint8 internal constant CLAIM_FREQ = 4; //Total 4 times claim
 
     mapping(address => bool) public userClaimed;
@@ -40,9 +44,11 @@ contract MerkleChild {
         endDate = _endDate;
         creator = _creator;
         owner = _owner;
+        factory = IFactory(msg.sender);
     }
 
-    function claim(uint256 amount, bytes32[] calldata proof) external {
+    function claim(uint256 amount, bytes32[] calldata proof) external payable {
+        require(msg.value >= factory.claimFee(), "Claim fee not sent");
         require(block.timestamp >= startDate && block.timestamp <= endDate, "Not Started/Expired");
         require(canUserClaim(msg.sender, amount, proof), "Invalid proof");
         require(!userClaimed[msg.sender], "Already claimed");
@@ -50,11 +56,8 @@ contract MerkleChild {
         userClaimed[msg.sender] = true;
         emit Claim(msg.sender, amount);
 
-        uint256 fee = (amount * CLAIM_FEE) / 1000;
-        token.transfer(owner, fee);
-        amount -= fee;
-
         token.transfer(msg.sender, amount);
+        payable(owner).transfer(msg.value);
     }
 
     function creatorClaim(uint8 roundId) external {

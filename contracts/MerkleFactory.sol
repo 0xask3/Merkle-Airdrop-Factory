@@ -12,10 +12,11 @@ contract MerkleFactory is Ownable {
     address[] private allAirdrops;
 
     IERC20 public immutable weth;
-    uint256 public feeValue = 0.01 ether;
+    uint256 public creatorFee = 0.01 ether;
+    uint256 public claimFee = 0.003 ether;
     address payable public feeAddress;
 
-    uint256 public minClaimPeriod = 14 days;
+    uint256 public minClaimPeriod = 2 hours;
     uint256 public maxClaimPeriod = 90 days;
 
     constructor(address _weth) {
@@ -36,13 +37,13 @@ contract MerkleFactory is Ownable {
         require(duration >= minClaimPeriod && duration <= maxClaimPeriod, "Invalid duration to claim airdrop");
         require(_amount > 0, "Zero amount");
 
-        MerkleChild newAirdrop = new MerkleChild(_token, msg.sender, owner(), _startDate, _endDate, _merkleRoot);
+        MerkleChild newAirdrop = new MerkleChild(_token, msg.sender, feeAddress, _startDate, _endDate, _merkleRoot);
         airdropUserList[address(newAirdrop)] = _url;
 
         if (_isPayingInToken) {
-            weth.transferFrom(msg.sender, feeAddress, feeValue);
+            weth.transferFrom(msg.sender, feeAddress, creatorFee);
         } else {
-            require(msg.value >= feeValue, "Fees not paid");
+            require(msg.value >= creatorFee, "Fees not paid");
             feeAddress.transfer(msg.value);
         }
 
@@ -53,9 +54,14 @@ contract MerkleFactory is Ownable {
         IERC20(_token).transferFrom(msg.sender, address(newAirdrop), _amount);
     }
 
-    function setFees(address payable _newAddress, uint256 _newFees) external onlyOwner {
+    function setFees(
+        address payable _newAddress,
+        uint256 _creatorFee,
+        uint256 _claimFee
+    ) external onlyOwner {
         feeAddress = _newAddress;
-        feeValue = _newFees;
+        creatorFee = _creatorFee;
+        claimFee = _claimFee;
     }
 
     function setClaimPeriod(uint256 min, uint256 max) external onlyOwner {
