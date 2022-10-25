@@ -62,7 +62,7 @@ contract MerkleChild {
 
     function creatorClaim(uint8 roundId) external {
         require(msg.sender == creator, "Not creator");
-        require(canCreatorClaim(roundId), "Not in claim period");
+        require(canCreatorClaim(roundId), "Not in creator claim period");
         require(!creatorClaimed[roundId], "Already claimed");
         require(roundId < CLAIM_FREQ, "Invalid claim round");
 
@@ -76,7 +76,7 @@ contract MerkleChild {
 
     function ownerClaim(uint8 roundId) external {
         require(msg.sender == owner, "Not owner");
-        require(canCreatorClaim(roundId), "Not in claim period");
+        require(canOwnerClaim(roundId), "Not in owner claim period");
         require(!ownerClaimed[roundId], "Already claimed");
         require(roundId < CLAIM_FREQ, "Invalid claim round");
 
