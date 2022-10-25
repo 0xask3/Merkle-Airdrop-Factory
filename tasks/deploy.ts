@@ -4,14 +4,14 @@ import type { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
 
 task("deploy", "Deploys a given contract")
   .addParam("contract", "Name of contract to be deployed")
-  .addParam("verify", "Whether verify the contract or not")
   .addOptionalParam("args", "Constructor arguments for contract")
+  .addFlag("verify", "Whether verify the contract or not")
   .setAction(async function (taskArguments: TaskArguments, hre: HardhatRuntimeEnvironment) {
     await hre.run("compile");
     const signers: SignerWithAddress[] = await hre.ethers.getSigners();
     const Factory = await hre.ethers.getContractFactory(taskArguments.contract);
     let contract, args;
-    console.log(`\n Deploying contract: ${taskArguments.contract} \n`);
+    console.log(`\nDeploying contract: ${taskArguments.contract} \n`);
 
     if (taskArguments.args) {
       const params: String[] = taskArguments.args.split(",");
@@ -22,11 +22,13 @@ task("deploy", "Deploys a given contract")
       args = [];
     }
 
-    console.log("Contract deployed, waiting for 5 confirmations...\n");
-    await contract.deployTransaction.wait(5);
+    console.log(`Contract deployed succesfully \n`);
+    console.log(`Transaction Hash: ${contract.deployTransaction.hash}\n`);
+    console.log("Waiting for 3 confirmations...\n");
+    await contract.deployTransaction.wait(3);
     console.log(`${taskArguments.contract} deployed to: ${contract.address} \n`);
 
-    if (taskArguments.verify == 1) {
+    if (taskArguments.verify) {
       console.log(`Verifying contract: ${taskArguments.contract} \n`);
       await hre.run("verify:verify", {
         address: contract.address,
