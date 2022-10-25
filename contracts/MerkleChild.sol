@@ -13,8 +13,8 @@ contract MerkleChild {
     IERC20 public immutable token;
     IFactory private immutable factory;
 
-    uint32 internal constant CLAIM_GAP = 1 days;
-    uint32 internal constant CLAIM_PERIOD = 1 days;
+    uint32 internal constant CLAIM_GAP = 1 hours;
+    uint32 internal constant CLAIM_PERIOD = 1 hours;
     uint8 internal constant CLAIM_FREQ = 4; //Total 4 times claim
 
     mapping(address => bool) public userClaimed;
