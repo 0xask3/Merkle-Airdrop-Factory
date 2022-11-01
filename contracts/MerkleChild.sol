@@ -19,7 +19,7 @@ contract MerkleChild {
 
     mapping(address => bool) public userClaimed;
     mapping(uint8 => bool) public creatorClaimed;
-    mapping(uint8 => bool) public ownerClaimed;
+    bool public ownerClaimed;
 
     uint256 public nonClaimedFunds;
     uint256 public startDate;
@@ -74,25 +74,28 @@ contract MerkleChild {
         token.transfer(creator, nonClaimedFunds / CLAIM_FREQ);
     }
 
-    function ownerClaim(uint8 roundId) external {
+    function ownerClaim() external {
         require(msg.sender == owner, "Not owner");
-        require(canOwnerClaim(roundId), "Not in owner claim period");
-        require(!ownerClaimed[roundId], "Already claimed");
-        require(roundId < CLAIM_FREQ, "Invalid claim round");
+        require(ownerClaimStatus(), "Not in owner claim period");
 
         if (nonClaimedFunds == 0) {
             nonClaimedFunds = token.balanceOf(address(this));
         }
 
-        ownerClaimed[roundId] = true;
-        token.transfer(owner, nonClaimedFunds / CLAIM_FREQ);
+        ownerClaimed = true;
+        token.transfer(owner, nonClaimedFunds);
     }
 
     function canCreatorClaim(uint8 roundId) public view returns (bool) {
         uint256 start = endDate + (((2 * roundId) + 1) * CLAIM_GAP);
         uint256 end = start + CLAIM_PERIOD;
+        bool status = block.timestamp >= start && block.timestamp <= end;
 
-        return (block.timestamp >= start && block.timestamp <= end);
+        if(roundId > 0){
+            status = status && creatorClaimed[roundId-1];
+        }
+
+        return status;
     }
 
     function canOwnerClaim(uint8 roundId) public view returns (bool) {
@@ -119,12 +122,15 @@ contract MerkleChild {
         }
     }
 
-    function ownerClaimStatus() public view returns (bool[] memory status) {
-        status = new bool[](CLAIM_FREQ);
-
+    function ownerClaimStatus() public view returns (bool status) {
         for (uint8 i = 0; i < CLAIM_FREQ; i++) {
-            status[i] = (canOwnerClaim(i) && !ownerClaimed[i]);
+            if(canOwnerClaim(i)){
+                status = true;
+                break;
+            }
         }
+
+        status = status && !ownerClaimed;
     }
 
     function userClaimStatus(address user) public view returns (bool) {
