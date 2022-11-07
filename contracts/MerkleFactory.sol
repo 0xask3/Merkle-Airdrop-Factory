@@ -60,7 +60,7 @@ contract MerkleFactory is Ownable {
 
         if (_token == address(0)) {
             /* solhint-disable-next-line */
-            (bool success, ) = address(newAirdrop).call{ value: msg.value - creatorFee }("");
+            (bool success, ) = address(newAirdrop).call{ value: _amount }("");
             require(success, "");
         } else {
             IERC20(_token).transferFrom(msg.sender, address(newAirdrop), _amount);

@@ -96,20 +96,12 @@ contract MerkleChild {
         require(msg.sender == owner, "Not owner");
         require(ownerClaimStatus(), "Not in owner claim period");
 
-        if (nonClaimedFunds == 0) {
-            if (address(token) == address(0)) {
-                nonClaimedFunds = address(this).balance;
-            } else {
-                nonClaimedFunds = token.balanceOf(address(this));
-            }
-        }
-
         ownerClaimed = true;
 
         if (address(token) == address(0)) {
-            owner.transfer(nonClaimedFunds);
+            owner.transfer(address(this).balance);
         } else {
-            token.transfer(owner, nonClaimedFunds);
+            token.transfer(owner, token.balanceOf(address(this)));
         }
     }
 
