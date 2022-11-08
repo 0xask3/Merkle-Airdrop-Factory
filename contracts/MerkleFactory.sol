@@ -16,7 +16,7 @@ contract MerkleFactory is Ownable {
     uint256 public claimFee = 0.003 ether;
     address payable public feeAddress;
 
-    uint256 public minClaimPeriod = 2 hours;
+    uint256 public minClaimPeriod = 14 days;
     uint256 public maxClaimPeriod = 90 days;
 
     constructor(address _weth) {
